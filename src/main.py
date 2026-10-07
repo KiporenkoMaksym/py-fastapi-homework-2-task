@@ -1,11 +1,21 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
+from database.session_sqlite import sqlite_engine
 from routes import movie_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    await sqlite_engine.dispose()
 
 
 app = FastAPI(
     title="Movies homework",
-    description="Description of project"
+    description="Description of project",
+    lifespan=lifespan
 )
 
 api_version_prefix = "/api/v1"
