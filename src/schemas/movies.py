@@ -1,7 +1,7 @@
-from datetime import date
+from datetime import date, timedelta
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, field_validator, ValidationInfo
+from pydantic import BaseModel, ConfigDict, field_validator, Field
 
 from src.database.models import MovieStatusEnum
 
@@ -96,28 +96,48 @@ class MovieReadSchema(BaseModel):
 
 
 class MovieCreateSchema(BaseModel):
-    name: str
+    name: str = Field(max_length=255)
     date: date
-    score: float
+    score: float = Field(ge=0, le=100)
     overview: str
     status: MovieStatusEnum
-    budget: float
-    revenue: float
+    budget: float = Field(ge=0)
+    revenue: float = Field(ge=0)
     country: str
     genres: list[str]
     actors: list[str]
     languages: list[str]
 
+    @field_validator("date")
+    @classmethod
+    def validate_date(cls, value: date) -> date:
+        if value > date.today() + timedelta(days=365):
+            raise ValueError("Date cannot be more than one year in the future.")
+        return value
+
 
 class MovieUpdateSchema(BaseModel):
-    name: Optional[str] = None
+    name: Optional[str] = Field(default=None, max_length=255)
     date: Optional[date] = None
-    score: Optional[float] = None
+    score: Optional[float] = Field(default=None, ge=0, le=100)
     overview: Optional[str] = None
     status: Optional[MovieStatusEnum] = None
-    budget: Optional[float] = None
-    revenue: Optional[float] = None
+    budget: Optional[float] = Field(default=None, ge=0)
+    revenue: Optional[float] = Field(default=None, ge=0)
     country: Optional[str] = None
     genres: Optional[list[str]] = None
     actors: Optional[list[str]] = None
     languages: Optional[list[str]] = None
+
+    @field_validator("date")
+    @classmethod
+    def validate_date(cls, value: Optional[date]) -> Optional[date]:
+        if value is None:
+            return value
+
+        if value > date.today() + timedelta(days=365):
+            raise ValueError(
+                "Date cannot be more than one year in the future."
+            )
+
+        return value

@@ -12,6 +12,10 @@ from src.database.models import (
 from src.schemas.movies import MovieCreateSchema, MovieUpdateSchema
 
 
+class DuplicateMovieError(Exception):
+    pass
+
+
 async def _get_or_create_related(
         db: AsyncSession, model, field_name: str, values: list[str]
 ):
@@ -35,7 +39,7 @@ async def create_movie(db: AsyncSession, movie: MovieCreateSchema):
     )
     result_existing = await db.execute(stmt_existing)
     if result_existing.scalars().first():
-        raise ValueError(
+        raise DuplicateMovieError(
             f"A movie with the name '{movie.name}' and release date '{movie.date.isoformat()}' already exists."
         )
 

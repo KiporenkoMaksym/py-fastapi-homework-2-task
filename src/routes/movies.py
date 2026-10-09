@@ -3,8 +3,13 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload
 
-from src.crud.crud import create_movie, update_movie, delete_movie
-from src.database import get_db, MovieModel  # Використовуємо get_db замість get_sqlite_db
+from src.crud.crud import (
+    create_movie,
+    update_movie,
+    delete_movie,
+    DuplicateMovieError,
+)
+from src.database import get_db, MovieModel
 from src.schemas import MovieListResponseSchema
 from src.schemas.movies import (
     MovieReadSchema,
@@ -41,7 +46,7 @@ async def list_movies(
     if page > total_pages:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No movies found for this page."
+            detail="No movies found."
         )
 
     offset = (page - 1) * per_page
@@ -120,15 +125,20 @@ async def read_movie(
 )
 async def add_movie(
     movie: MovieCreateSchema,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     try:
         new_movie = await create_movie(db, movie)
         return new_movie
-    except ValueError as e:
+    except DuplicateMovieError as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=str(e)
+            detail=str(e),
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
         )
 
 
