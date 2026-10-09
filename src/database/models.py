@@ -168,5 +168,17 @@ class MovieModel(Base):
     def default_order_by(cls):
         return [cls.id.desc()]
 
+    @property
+    def genre_ids(self) -> list[int]:
+        return [genre.id for genre in self.genres]
+
+    @property
+    def actor_ids(self) -> list[int]:
+        return [actor.id for actor in self.actors]
+
+    @property
+    def language_ids(self) -> list[int]:
+        return [language.id for language in self.languages]
+
     def __repr__(self):
         return f"<Movie(name='{self.name}', release_date='{self.date}', score={self.score})>"

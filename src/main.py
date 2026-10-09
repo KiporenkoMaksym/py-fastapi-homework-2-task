@@ -2,8 +2,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from database.session_sqlite import sqlite_engine
-from routes import movie_router
+from src.database.session_sqlite import sqlite_engine
+from src.routes import movie_router
 
 
 @asynccontextmanager
